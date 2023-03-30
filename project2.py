@@ -7,114 +7,11 @@ Original file is located at
     https://colab.research.google.com/drive/1P23Sj1ehSaAVnuOFtfL0dnpg1QZRhvGw
 """
 
-#Individual Project 2
 
-#################Selenium:  The Bored Ape Yacht Club#################
-
-#According to Wikipedia, “[The] Bored Ape Yacht Club […] is a non-fungible token (NFT) collection built on 
-#the Ethereum blockchain.  The collection features profile pictures of cartoon apes that are procedurally generated 
-#by an algorithm.  […]  As of 2022, [Bored Ape Yacht Club’s parent company,] Yuga Labs, is valued at US$4 billion. 
-# This is due in large part to the sales of the Bored Ape Yacht Club NFT collection totaling over US$1 billion.  
-#Various celebrities have purchased these non-fungible tokens, including Justin Bieber, Snoop Dogg, Gwyneth Paltrow and others.”
-
-#(1)  (No programming yet,) go to https://opensea.io/collection/boredapeyachtclub Links to an external site. and
-# select all apes with “Solid gold” fur and sort them “Price high to low” .  Use the URL for the subsequent coding.
-
-#(2)  Using Python or Java, write code that uses Selenium to access the URL from (1), click on each of the top-8 
-#most expensive Bored Apes, and store the resulting details page to disk, “bayc_[N].htm” (replace [N] with the 
-#ape number).
-
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-import time
-import requests
-from pymongo import MongoClient
-import os
-from bs4 import BeautifulSoup
-import json
-import re
-
-
-
-os.chdir('/Applications/') #*********please mention the working directory where your chrome driver is before running
-working_direc = os.getcwd()
-
-def Q2(working_direc):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
-    }
-    
-    options = Options()
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36")
-    
-    
-    #navigate to the bored ape yacht club with the specified filters
-    driverpath = os.path.join(working_direc,'chromedriver')
-    driver = webdriver.Chrome(executable_path=driverpath, options=options) #relative path
-    driver.get('https://opensea.io/collection/boredapeyachtclub?search[sortAscending]=false&search[stringTraits][0][name]=Fur&search[stringTraits][0][values][0]=Solid%20Gold')
-    time.sleep(5)
-
-    
-    #loop to click on first 8 search result and download the contents as html on local
-    for i in range(1, 9):
-            #product click
-        products = driver.find_elements(By.CLASS_NAME, "sc-29427738-0.sc-e7851b23-1.dVNeWL.hfa-DJE.Asset--loaded") #inspect to find common element
-        product = products[i-1] # Select the i-th element (0-indexed list)
-        driver.execute_script("arguments[0].scrollIntoView(true);", product) #found this code on stack to avoid scroll intercept error for selenium
-        product.click() #click on ith monkey
-        time.sleep(5) 
-                    
-        html = driver.page_source
-        with open(f"bayc_{i}.htm", "w") as f:
-            f.write(html)
-                
-        driver.back() #back to main page
-        time.sleep(5)
-    
-    time.sleep(2)
-Q2(working_direc)
-
-#################MongoDB#################
-#(3)  Write code that goes through all 8 htm files downloaded in (2) and stores each ape’s name 
-#(its number) and all its attributes in a document inside a MongoDB collection called “bayc”.
-
-
-def Q3():
-    
-    client = MongoClient('mongodb://localhost:27017/') #connecting to mongodb server
-    db = client['bayc'] #creating a database
-    collection = db['bayc'] #collection inside database 
-    
-    for i in range(1, 9):
-        filename = f'bayc_{i}.htm' #loop through each 8 files
-        with open(filename, 'r') as f:
-                    # Parse HTML with BeautifulSoup
-                    soup = BeautifulSoup(f, 'html.parser')
-        
-                    # Find all attribute elements and extract name and value
-                    name = soup.find('h1', {'class': 'sc-29427738-0 hKCSVX item--title'}).text #name of each monkey
-                    attributes = {}
-                    for elem in soup.find_all('div', {'class': 'Panel--isContentPadded item--properties'}): #nested loop to loop through all elements with the class Panel--isContentPadded item--properties
-                        for attr_elem in elem.find_all('div', {'class': 'Property--type'}): #attribute type
-                            attr = attr_elem.text.strip()
-                            value = attr_elem.find_next_sibling('div', {'class': 'Property--value'}).text.strip() #attribute information
-                            attributes[attr] = value
-                            
-                
-                    # Store each ape's search resutl number, name and all attributes in a MongoDB collection
-                    doc = {'i': i, 'name': name, 'attributes': attributes}
-                    collection.insert_one(doc)
-Q3()                   
- 
 #################Regular Webscraping#################
-# (4) Yellow Pages uses GET requests for its search.  Using plain Python or Java (no Selenium), write a program that searches 
-#on yellowpages.com for the top 30 “Pizzeria” in San Francisco (no need to verify that the shop is actually selling pizzas, 
-#just search for “Pizzeria”, top 30 shops according to YP's "Default" sorting).  Save each search result page to disk, 
-#“sf_pizzeria_search_page.htm”.
+#  program that searches on yellowpages.com for the top 30 “Pizzeria” in San Francisco.  Save each search result page to disk, “sf_pizzeria_search_page.htm”.
 
-def Q4():
+def X4():
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0',
@@ -131,16 +28,15 @@ def Q4():
     with open('sfS_pizzeria_search_page.htm', 'w') as f:
         f.write(response.text)
     
-Q4() 
+X4() 
 
-#(5) Using Python or Java, write code that opens the search result page saved in 
-#(4) and parses out all shop information (search rank, name, linked URL [this store’s 
+# code that opens the search result page saved above and parses out all shop information (search rank, name, linked URL [this store’s 
 #YP URL], star rating If It Exists, number of reviews IIE, TripAdvisor rating IIE, 
 #number of TA reviews IIE, “$” signs IIE, years in business IIE, review IIE, and amenities
-#IIE).  Please be sure to skip all “Ad” results.
+#IIE).  We will skip all “Ad” results.
 
 # read in saved HTML file
-def Q5():
+def X5():
     with open('sfS_pizzeria_search_page.htm', 'r') as f:
         html = f.read()
     
@@ -231,15 +127,15 @@ def Q5():
              })
     print(shop_information)
     print(len(shop_information))
-Q5()
+X5()
 
 
 ################# MongoDB#################
-#(6)  Copy your code from (5).  Modify the code to create a MongoDB collection called
+# Modifing the code to create a MongoDB collection called
 # “sf_pizzerias” that stores all the extracted shop information, one document for each 
 #shop.
 
-def Q6():
+def X6():
 
     # connect to MongoDB
     client = MongoClient('mongodb://localhost:27017/') 
@@ -335,13 +231,13 @@ def Q6():
             
             # insert the shop information into the MongoDB collection
             pizzacollection.insert_one(shop_information)
-Q6()            
+X6()            
 ################# Parsing#################
-#(7)  Write code that reads all URLs stored in “sf_pizzerias” and download each shop page.  
+##code that reads all URLs stored in “sf_pizzerias” and download each shop page.  
 #Store the page to disk, “sf_pizzerias_[SR].htm” (replace [SR] with the search rank).
 
 
-def Q7():
+def X7():
     with open('sfS_pizzeria_search_page.htm', 'r') as f:
         html = f.read()
     
@@ -374,11 +270,11 @@ def Q7():
         with open(filename, 'wb') as f:
             f.write(response.content)
         time.sleep(5) #delay between requests
-Q7()
+X7()
 
-#(8)  Write code that reads the 30 shop pages saved in (7) and parses each shop’s address, 
+#code that reads the 30 shop pages saved in (7) and parses each shop’s address, 
 #phone number, and website.
-def Q8():
+def X8():
     for i in range(0, 30):
         filename = 'SFS_pizzerias_' + str(i+1) + '.htm'  #loop through each 30 files
         with open(filename, 'r') as f:
@@ -399,18 +295,16 @@ def Q8():
             #print(f'Pizzeria {i+1}: {name} - {address}- {phone}- {website}')
             print({"rank":i+1,"name": name, "address": address, "phone": phone, "website": website})
                      
-Q8()
+X8()
 
 ################# API#################
-#(9)  Sign up for a free account with https://positionstack.com/ Links to an external site.  
-#Copy your code from (8).  Modify the code to query each shop address’ geolocation (long, lat).  
+# We will Sign up for a free account with https://positionstack.com/ 
+#The we will Copy above  code and  Modify the code to query each shop address’ geolocation (long, lat).  
 #Update each shop document on the MongoDB collection “sf_pizzerias” to contain the shop’s address, 
 #phone number, website, and geolocation.
 
 
-
-
-def Q9():
+def X9():
     client = MongoClient('mongodb://localhost:27017/')
     db = client["sf_pizzerias"]
     collection = db["sf_pizzerias"]      
@@ -451,4 +345,4 @@ def Q9():
             #key = {"name": name} #matching key
             #new_values = {"$set": {"address": address,"phone": phone,"website": website,"latitude": latitude,"longitude": longitude}}
             #collection.update_one(key, new_values)
-Q9()
+X9()
